@@ -7,4 +7,5 @@ import sys
 
 def show_error(e):
     print(f"发生错误: {e}")
+    input()
     sys.exit(1)

@@ -2,12 +2,16 @@
 # Function: 打开Edge浏览器，打开网址，进行登录
 # Update: 25.03.05
 # Notice: 考虑到大部分人都是Windows系统、自带Edge浏览器，但是不是所有人都有Chrome，所有用Edge浏览器的自动化
+#       1. 修改了driver的定位代码和更新逻辑
+#       2. 更新：如果未出现异常则不使用input()保留窗口，仅在报错时保留控制界面
+#       （如果需要查看执行记录，可以在控制窗口调用main.exe运行程序）
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.service import Service
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.edge.options import Options
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import WebDriverException
 
 import time
 import os
@@ -136,9 +140,12 @@ def login(driver_path):
     # 启动浏览器驱动
     driver = webdriver.Edge(options=driver_options, service=Service(driver_path))
     print("———— 启动Edge浏览器")
-    driver.get(url)
-    # 等待页面加载
-    time.sleep(1)
+    try:
+        driver.get(url)
+        # 等待页面加载
+        time.sleep(1)
+    except WebDriverException as e:
+        show_error(e)
 
     # 检测是否需要进行登录操作
     # 如果直接进入主界面，就不需要进行登录
@@ -187,6 +194,7 @@ def login(driver_path):
 
             print("———— 信息已更新，请重启程序")
             driver.quit()
+            input()
             sys.exit(1)
 
     # ——————————— Enter Verification Code ——————————
@@ -198,15 +206,26 @@ def login(driver_path):
     return
 
 
-if __name__ == "__main__":
+def main():
     # 先尝试对driver进行更新；如果更新不了，则尝试进行先使用已有路径进行登录
-    update_driver_flag = 0
-    driver_path = update_driver()
+    driver_path, update_driver_flag = update_driver()
+    # 如果未成功获取到已有的driver、且未能更新driver
     if not driver_path:
-        driver_path = ".wdm/drivers/edgedriver/win64/133.0.3065.92/msedgedriver.exe"
-        update_driver_flag = 1
+        print("未找到EdgeDriver: 请连接网络后重新运行程序，或在默认路径手动安装EdgeDriver")
+        input()
+        sys.exit(1)
+
     login(driver_path)
-    if update_driver_flag:
+
+    # 如果先前未联网、未成功更新driver，则补更新一次driver
+    # 保证driver版本最新
+    if not update_driver_flag:
         update_driver()
     # print(sys.path)
-    input()
+
+    return
+
+
+if __name__ == "__main__":
+    main()
+    # input("程序运行结束，按回车键关闭程序")
