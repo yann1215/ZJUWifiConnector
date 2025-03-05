@@ -28,10 +28,18 @@ def delete_zip(driver_download_path):
 
 
 def update_driver():
+
+    # 获取当前程序运行的目录（适用于 PyInstaller 打包的情况）
+    if getattr(sys, 'frozen', False):  # 检测是否为 PyInstaller 打包的 EXE
+        BASE_DIR = sys._MEIPASS  # PyInstaller 解压后的临时目录
+    else:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通 Python 运行时
+
     # 自定义下载路径
     os.environ["WDM_LOCAL"] = "true"  # 启用本地缓存
     # 将driver安装在同一目录下
-    driver_download_path = os.getcwd()
+    # driver_download_path = os.getcwd()
+    driver_download_path = BASE_DIR
     os.environ["WDM_CACHE_PATH"] = driver_download_path
     # print("当前目录：", driver_download_path)
 

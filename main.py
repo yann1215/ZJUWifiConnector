@@ -18,12 +18,12 @@ from showerror import show_error
 
 
 # ============ User Data Manager ==========
-def save_user_data(username, password):
-    with open("user_data.txt", "w") as file:
+def save_user_data(user_data_file, username, password):
+    with open(user_data_file, "w") as file:
         file.write(f"{username}\n{password}\n")  # 将用户名和密码保存到文件中
 
 
-def load_user_data():
+def load_user_data(user_data_file):
     if os.path.exists("user_data.txt"):  # 检查文件是否存在
         with open("user_data.txt", "r") as file:
             username = file.readline().strip()  # 读取用户名
@@ -108,8 +108,15 @@ def login(driver_path):
     # 目标登录页面 URL
     url = "https://net2.zju.edu.cn/"  # 替换成你要登录的网址
 
+    # 获取当前程序运行的目录（适用于 PyInstaller 打包的情况）
+    if getattr(sys, 'frozen', False):  # 检测是否为 PyInstaller 打包的 EXE
+        BASE_DIR = sys._MEIPASS  # PyInstaller 解压后的临时目录
+    else:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通 Python 运行时
+
     # 登录信息
-    username, password = load_user_data()
+    user_data_file = os.path.join(BASE_DIR, "user_data.txt")
+    username, password = load_user_data(user_data_file)
     if not username or not password:
         username = input("请输入用户名: ")
         while not username:
@@ -117,7 +124,7 @@ def login(driver_path):
         password = input("请输入密码: ")
         while not password:
             password = input("密码不能为空，请输入密码: ")
-        save_user_data(username, password)
+        save_user_data(user_data_file, username, password)
 
     # —————————————— Launch Driver ———————————————
 
@@ -168,7 +175,7 @@ def login(driver_path):
             password = input("请输入密码: ")
             while not password:
                 password = input("密码不能为空，请输入密码: ")
-            save_user_data(username, password)
+            save_user_data(user_data_file, username, password)
             password_attempt -= 1
 
         else:
@@ -176,7 +183,7 @@ def login(driver_path):
             # print("登录失败，用户名或密码错误")
             username = input("请输入用户名: ")
             password = input("请输入密码: ")
-            save_user_data(username, password)
+            save_user_data(user_data_file, username, password)
 
             print("———— 信息已更新，请重启程序")
             driver.quit()
