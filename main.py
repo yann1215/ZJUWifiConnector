@@ -201,3 +201,5 @@ if __name__ == "__main__":
     login(driver_path)
     if update_driver_flag:
         update_driver()
+    # print(sys.path)
+    input()
