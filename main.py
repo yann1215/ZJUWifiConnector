@@ -182,7 +182,9 @@ def login(driver_path):
             driver.quit()
             sys.exit(1)
 
-    # # ——————————— Enter Verification Code ——————————
+    # ——————————— Enter Verification Code ——————————
+    # 校园网5次输错密码后会要求输入验证码，但是用代码处理太复杂了
+    # 还是让用户自己手操一下比较快（真的会有人输错5次密码吗……？）
     # enter_verification_code(driver)
     # time.sleep(1)
 
