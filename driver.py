@@ -40,17 +40,15 @@ def update_driver():
     try:
         # 下载并安装 EdgeDriver
         driver_path = EdgeChromiumDriverManager().install()
+        # 清除目录内的压缩包
+        delete_zip(driver_download_path)
         print("EdgeDriver版本已是最新")
+        return driver_path
     except Exception as e:
         print(f"EdgeDriver下载失败: {e}")
         print("请检查网络配置后重新运行程序")
-        sys.exit(1)  # 终止程序运行
-
-    # 清除目录内的压缩包
-    delete_zip(driver_download_path)
-
-    # 返回driver地址（文件名）
-    return driver_path
+        # sys.exit(1)  # 终止程序运行
+        return None
 
 if __name__ == "__main__":
     update_driver()

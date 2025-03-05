@@ -190,8 +190,12 @@ def login(driver_path):
 
 
 if __name__ == "__main__":
-    # 因为如果不登陆联网就不能更新driver，所以先打包一个进去，联网后再进行更新
-    # 如果后续因为版本不匹配所以无法联网，需要先借助其他设备联网更新driver
-    driver_path = ".wdm/drivers/edgedriver/win64/133.0.3065.92/msedgedriver.exe"
+    # 先尝试对driver进行更新；如果更新不了，则尝试进行先使用已有路径进行登录
+    update_driver_flag = 0
+    driver_path = update_driver()
+    if not driver_path:
+        driver_path = ".wdm/drivers/edgedriver/win64/133.0.3065.92/msedgedriver.exe"
+        update_driver_flag = 1
     login(driver_path)
-    update_driver()
+    if update_driver_flag:
+        update_driver()
