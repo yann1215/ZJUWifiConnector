@@ -1,0 +1,2 @@
+# ZJUWifiConnector
+电脑端自动登录校园网认证的python脚本
