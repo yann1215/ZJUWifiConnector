@@ -2,11 +2,14 @@
 # Function: 打开Edge浏览器，打开网址，进行登录
 # Update: 25.03.06
 # Notice: 考虑到大部分人都是Windows系统、自带Edge浏览器，但是不是所有人都有Chrome，所有用Edge浏览器的自动化
-#       1. 修改了driver的定位代码和更新逻辑
-#       2. 更新：如果未出现异常则不使用input()保留窗口，仅在报错时保留控制界面
-#       （如果需要查看执行记录，可以在控制窗口调用main.exe运行程序）
-#       3. 修改了一些文件名称；增加了welcome script
-#       4. 打包了Edge Driver，这下初次无网络也能正常启动了（但是还要录入用户名和密码）
+#       1. 打包了Edge Driver，这下初次无网络也能正常启动了（但是还要录入用户名和密码）
+#       2. 显示QQBrowser user data path not found 问题无法解决，就让它显示吧（悲）
+#       3. 程序延时关闭的功能改为在.bat文件中实现
+
+
+import time
+import os
+import sys
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,11 +17,6 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import WebDriverException
-
-import time
-import os
-import sys
-import contextlib
 
 from driver import update_driver
 from error import show_error
@@ -71,33 +69,6 @@ def wrong_userdata_check(driver):
         # print("未检测到登录异常")
         return False
 
-
-# 自定义上下文管理器，临时屏蔽所有输出
-@contextlib.contextmanager
-def suppress_output():
-    # 保存原始输出流
-    original_stdout = sys.stdout
-    original_stderr = sys.stderr
-    # 重定向到空设备
-    sys.stdout = open(os.devnull, 'w')
-    sys.stderr = open(os.devnull, 'w')
-    try:
-        yield
-    finally:
-        # 恢复原始输出流
-        sys.stdout.close()
-        sys.stderr.close()
-        sys.stdout = original_stdout
-        sys.stderr = original_stderr
-
-
-def hold_before_close():
-    # 等待5s
-    duration = 5
-    start = time.perf_counter()
-    while time.perf_counter() - start < duration:
-        pass
-    return
 
 # ================ Input User Data =================
 def input_userdata(driver, username, password):
@@ -174,29 +145,27 @@ def login(driver_path):
     driver_options.use_chromium = True  # 确保使用 Chromium 内核的 Edge
     driver_options.add_argument("--no-sandbox")  # 禁用沙盒模式
 
-    driver_options.add_argument("--log-level=3")  # 禁用所有日志输出
-    driver_options.add_argument("--disable-logging")
-    driver_options.add_argument("--silent")
-
+    # 规避 Selenium 检测（可以解决SSL报错的问题）
+    driver_options.add_argument("--disable-blink-features=AutomationControlled")
+    driver_options.add_experimental_option("excludeSwitches", ["enable-logging"])  # 禁用日志
     # 禁用SSL验证
     driver_options.add_argument("--ignore-certificate-errors")
     driver_options.add_argument("--ignore-ssl-errors")
     # 允许不安全的SSL证书
     driver_options.add_argument("--allow-running-insecure-content")
 
-    # 解决 QQBrowser user data path not found 问题
-    driver_options.add_argument("--no-default-browser-check")
-    driver_options.add_argument("--disable-background-mode")
-    driver_options.add_argument("--disable-extensions")  # 禁用所有扩展
+    # # 解决显示
+    # driver_options.add_argument("--no-default-browser-check")
+    # driver_options.add_argument("--disable-background-mode")
+    # driver_options.add_argument("--disable-extensions")  # 禁用所有扩展
 
     # 启动浏览器驱动
     driver_service = Service(
-        executable_path=driver_path,  # 指定 msedgedriver 的路径
-        log_path='NUL'  # 禁用驱动日志
+        executable_path=driver_path,
+        # log_output=open(os.devnull, 'w'),   # 将Edge日志输出定向到空设备
     )
-    with suppress_output():
-        driver = webdriver.Edge(options=driver_options, service=driver_service)
-    print("———— 启动Edge浏览器")
+    driver = webdriver.Edge(options=driver_options, service=driver_service)
+    print("\n———— 启动Edge浏览器")
 
     try:
         driver.get(url)
@@ -265,7 +234,7 @@ def login(driver_path):
 
 
 def auto_connect():
-    print("欢迎使用ZJUWifiConnector!")
+    print("\n欢迎使用ZJUWifiConnector!")
 
     # 适配 EXE 运行环境
     if getattr(sys, 'frozen', False):
@@ -285,12 +254,12 @@ def auto_connect():
     # 如果先前未联网、未成功更新driver，则补更新一次driver
     # 保证driver版本最新
     if not update_driver_flag:
-        driver_path, update_driver_flag = update_driver()
-    # print(sys.path)
+        update_driver()
 
-    print("程序运行结束，将在5秒后关闭")
-    # 保留5s界面，使用户能看到窗口最后的返回信息
-    hold_before_close()
+    # print("\n程序运行结束，将在5秒后关闭")
+    # # 保留5s界面，使用户能看到窗口最后的返回信息
+    # time.sleep(5)
+
     return
 
 

@@ -7,15 +7,16 @@
 #       且受限于权限，不进行zip的删除，有需要的话可以根据路径手动删除安装压缩包
 
 
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from shutil import copy as copy_file
-
 import sys
 import os
 
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from shutil import copy as copy_file
+
+
 def update_driver():
     # 自动下载匹配版本的 EdgeDriver
-    print("———— 检查EdgeDriver版本")
+    print("\n———— 检查EdgeDriver版本")
 
     if getattr(sys, 'frozen', False):
         # 打包成EXE时，使用 sys._MEIPASS 作为基础目录
